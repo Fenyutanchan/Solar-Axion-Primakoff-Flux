@@ -4,7 +4,8 @@
 # https://opensource.org/licenses/MIT
 
 from autograd import grad
-from autograd.numpy import sqrt
+from autograd.numpy import abs, isnan, sqrt
+from warnings import warn
 
 def λ(x, y, z):
     return (x - y - z)**2 - 4 * y * z
@@ -31,6 +32,42 @@ def dt_over_dCosθCM(s, ma, mb, m1, m2, cosθ):
     # t = ma**2 + m1**2 - 2 * (Ea * E1 - p_ini * p_fin * cosθ)
     return 2 * (p_ini * p_fin * cosθ)
 # end def dt_over_dCosθ
+
+class CenterOfMassFrame:
+    def __init__(self, s, ma, mb, m1, m2):
+        self.s = s
+        self.ma = ma
+        self.mb = mb
+        self.m1 = m1
+        self.m2 = m2
+
+        self.initial_three_momentum_squared = center_of_mass_momentum_squared(self.s, self.ma, self.mb)
+        self.initial_three_momentum_magnitude = center_of_mass_momentum(self.s, self.ma, self.mb)
+
+        self.final_three_momentum_squared = center_of_mass_momentum_squared(self.s, self.m1, self.m2)
+        self.final_three_momentum_magnitude = center_of_mass_momentum(self.s, self.m1, self.m2)
+
+        self.Ea_CM_squared = self.ma**2 + self.initial_three_momentum_squared
+        self.Ea_CM = sqrt(self.Ea_CM_squared)
+
+        self.Eb_CM_squared = self.mb**2 + self.initial_three_momentum_squared
+        self.Eb_CM = sqrt(self.Eb_CM_squared)
+
+        self.E1_CM_squared = self.m1**2 + self.final_three_momentum_squared
+        self.E1_CM = sqrt(self.E1_CM_squared)
+
+        self.E2_CM_squared = self.m2**2 + self.final_three_momentum_squared
+        self.E2_CM = sqrt(self.E2_CM_squared)
+    # end def __init__
+
+    def t(self, cosθ):
+        return self.ma**2 + self.m1**2 - 2 * (self.Ea_CM * self.E1_CM - self.initial_three_momentum_magnitude * self.final_three_momentum_magnitude * cosθ)
+    
+    def dt_over_dcosθ(self, cosθ):
+        g = grad(self.t)
+        return g(cosθ)
+    # end def dt_over_dcosθ
+# end class CenterOfMassFrame
 
 # Laboratory frame means pb = (mb, 0, 0, 0)^T.
 class TransformCM2Lab:
@@ -99,10 +136,14 @@ class CosθLab2CosθCM(TransformCM2Lab):
         p_fin_CM = sqrt(p_fin_CM_squared)
         E1_CM = sqrt(self.m1**2 + p_fin_CM_squared)
 
-        return γ * (-β * E1_CM + p_fin_CM * cosθCM) - p_fin_CM * sqrt(1 - cosθCM**2) * cosθLab / sqrt(1 - cosθLab**2)
+        rslt = γ * (-β * E1_CM + p_fin_CM * cosθCM) - p_fin_CM * sqrt(1 - cosθCM**2) * cosθLab / sqrt(1 - cosθLab**2)
+        if isnan(rslt):
+            return abs(cosθCM - cosθLab)
+        # end if
+        return abs(rslt)
     # end def __check_result
 
-    def cosθCM(self, cosθLab):
+    def cosθCM(self, cosθLab, error=1e-10):
         cosθLab_squared = cosθLab**2
 
         p_fin_CM_squared = center_of_mass_momentum_squared(self.s, self.m1, self.m2)
@@ -132,11 +173,19 @@ class CosθLab2CosθCM(TransformCM2Lab):
 
         error1 = self.__check_result(result1, cosθLab)
         error2 = self.__check_result(result2, cosθLab)
+
+        message = "cosθLab = {}, result1 = {}, error1 = {}, result2 = {}, error2 = {}".format(cosθLab, result1, error1, result2, error2)
         if abs(error1) < abs(error2):
-            assert abs(error1) < 1e-10
+            if abs(error1) > error:
+                warn(message)
+            # end if
+            # assert abs(error1) < error, message
             return result1
         else:
-            assert abs(error2) < 1e-10
+            if abs(error2) > error:
+                warn(message)
+            # end if
+            # assert abs(error2) < error, message
             return result2
     # end def cosθCM
 

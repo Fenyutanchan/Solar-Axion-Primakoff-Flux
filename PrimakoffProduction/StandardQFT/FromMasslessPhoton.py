@@ -38,7 +38,7 @@ class dσ_over_dt:
     # end def set_mX
         
     def __call__(self, s, t):
-        coeff = -self.α * self.ZX**2 * self.gOverΛ**2 * abs(self.FXt(t))**2 / 8
+        coeff = -self.α * self.ZX**2 * self.gOverΛ**2 * self.FXt(t)**2 / 8
         numerator = self.ma**4 * self.mX**2 - self.ma**2 * t * (s + self.mX**2) + t * ((s - self.mX**2)**2 + s * t)
         denominator = t**2 * (s - self.mX**2)**2
 

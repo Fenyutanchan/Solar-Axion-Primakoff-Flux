@@ -3,8 +3,8 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-import numpy as np
-from numpy import cross, pi
+# import numpy as np
+from numpy import pi
 
 class dσ_over_dCosθ:
     def __init__(self):
@@ -29,6 +29,10 @@ class dσ_over_dCosθ:
     def set_ZX(self, ZX):
         self.ZX = ZX
     # end def set_ZX
+        
+    def set_κ(self, κ):
+        self.κ = κ
+    # end def set_κ
         
     def __call__(self, ω, cosθ):
         coeff = 2 * pi * self.ZX**2 * self.α * self.gOverΛ**2 / (32 * pi)
