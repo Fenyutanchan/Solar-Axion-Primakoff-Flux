@@ -1,8 +1,8 @@
-from numpy import exp, log, sqrt
+from numpy import clip, exp, log, sqrt
 from numpy import pi as π
 
 from .read_solar_model import solar_model
-from .units import units_in_MeV, proton_mass, electron_mass, radius_of_Sun, distance_to_Sun
+from .units import units_in_MeV, proton_mass, electron_mass, radius_of_Sun, distance_to_Sun, flux_unit
 
 from scipy.integrate import quad
 
@@ -38,14 +38,15 @@ def total_cross_section(
 ):
     if ks_sqr == 0:
         return 0 # to do
+    # end if
 
     g = 1e-10 / unit.GeV if g_aγ == "default" else g_aγ
     M = proton_mass(unit) if mass == "default" else mass
     ma = axion_mass
     E = photon_energy
 
-    q_minus_sqr = q_sqr(E, -1, ma, unit, M)
-    q_plus_sqr = q_sqr(E, +1, ma, unit, M)
+    q_minus_sqr = q_sqr(E, sign=-1, axion_mass=ma, mass=M)
+    q_plus_sqr = q_sqr(E, sign=+1, axion_mass=ma, mass=M)
 
     L1_ma4 = 0 if ma == 0 else log(q_plus_sqr / q_minus_sqr) * ma**4
     L2 = log((q_plus_sqr + ks_sqr) / (q_minus_sqr + ks_sqr))
@@ -83,8 +84,8 @@ def transiation_rate(
         ks_sqr = 4 * π * unit.α_EM * (np + ne) / T
     else:
         ks_sqr = 0
-    # end if
-        
+    # end if-else
+
     X_dict = {
         "e": {"mass": electron_mass(unit), "charge": -1, "density": ne},
         "p": {"mass": proton_mass(unit), "charge": +1, "density": np}
@@ -104,6 +105,7 @@ def transiation_rate(
                 Q_X=Q, axion_mass=axion_mass,
                 unit=unit, g_aγ=g, mass=M
             )
+        # end if-else
 
         result += n * σ
     return result
@@ -125,6 +127,7 @@ def solar_axion_flux(
 ):
     if photon_energy < axion_mass:
         return 0
+    # end if
     
     R = radius_of_Sun(unit)
     D = distance_to_Sun(unit)
@@ -142,3 +145,19 @@ def solar_axion_flux(
 
     return coeff * integral * R**3 / D**2
 # end solar_axion_flux
+
+def solar_axion_flux_approx(photon_energy, axion_mass,
+    A=6.02, α=2.481, β=1.205, γ=1.7, unit:units_in_MeV=units_in_MeV(1),
+    flux_unit_prefix=1e10,
+    supress_factor_flag:bool=True
+):
+    E_bar = photon_energy / unit.keV
+    S = clip((1 - (axion_mass / photon_energy)**γ), a_min=0, a_max=None) if supress_factor_flag else 1
+    return A * flux_unit(flux_unit_prefix, unit) * E_bar**α * exp(-E_bar/β) * S
+# end solar_axion_flux_approx
+
+def solar_axion_flux_CAST2007(photon_energy,
+    A=6.02, α=2.481, β=1.205, unit:units_in_MeV=units_in_MeV(1), flux_unit_prefix=1e10
+):
+    return solar_axion_flux_approx(photon_energy, 0, A=A, α=α, β=β, unit=unit, flux_unit_prefix=flux_unit_prefix, supress_factor_flag=False)
+# end solar_axion_flux_CAST2007

@@ -8,4 +8,4 @@ from .units import units_in_MeV,\
     distance_to_Sun,\
     flux_unit
 from .read_solar_model import solar_model
-from .Primakoff import solar_axion_flux
+from .Primakoff import solar_axion_flux, solar_axion_flux_approx, solar_axion_flux_CAST2007
