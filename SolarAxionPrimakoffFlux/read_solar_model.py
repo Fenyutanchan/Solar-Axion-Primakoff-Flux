@@ -5,10 +5,11 @@
 
 from numpy import loadtxt
 from numpy import interp
+from os.path import dirname, join
 from .units import units_in_MeV, proton_mass
 
 class solar_model:
-    def __init__(self, data_file_path="data/struct_b16_agss09.dat"):
+    def __init__(self, data_file_path=join(dirname(__file__), "data", "struct_b16_agss09.dat")):
         self.data = loadtxt(data_file_path)
         self.heads = [
             "Mass", "Radius", "Temp", "Rho", "Pres", "Lumi", "H1", "He4", "He3", "C12",
