@@ -78,13 +78,13 @@ def transiation_rate(
     r = normalized_solar_radius
     nHe = solar_data.Sun_Helium_number_density_profile(r, unit)
     ne = solar_data.Sun_proton_number_density_profile(r, unit)
-    np = ne - nHe
+    np = ne - 2 * nHe
     # np = ne = solar_data.Sun_proton_number_density_profile(r, unit)
     g = 1e-10 / unit.GeV if g_aγ == "default" else g_aγ
 
     if Debye_effect:
         T = solar_data.Sun_temperature_profile(r, unit)
-        ks_sqr = 4 * π * unit.α_EM * (np + ne) / T
+        ks_sqr = 4 * π * unit.α_EM * (np + ne + 2**2 * nHe) / T
     else:
         ks_sqr = 0
     # end if-else

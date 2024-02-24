@@ -5,6 +5,8 @@ sys.path.append(dirname(dirname(__file__)))
 import numpy as np
 import SolarAxionPrimakoffFlux as sapf
 
+from scipy.optimize import minimize
+
 unit = sapf.units_in_MeV(1) # eV = 1
 keV = unit.keV
 eV = unit.eV
@@ -25,7 +27,7 @@ axion_mass_list = np.linspace(0, 4*keV, mass_length)
 
 # data = np.zeros((energy_length * mass_length, 3))
 
-normalized_factor = [7.2, 6.6, 4.8, 2.9, 1.5]
+# normalized_factor = [7.2, 6.6, 4.8, 2.9, 1.5]
 
 photon_energy_list = []
 ma_list = []
@@ -33,7 +35,11 @@ dΦ_dE_list = []
 # data_index = 0
 for (ii, ma) in enumerate(axion_mass_list):
     E_over_keV = .1
-    step_base = .1 * normalized_factor[ii] / 10
+    flux_fun = lambda E: sapf.solar_axion_flux(E, solar_data, unit=unit, g_aγ=g10, axion_mass=ma) / flux_unit
+    tmp = minimize(lambda E: -flux_fun(E), 10 * keV)
+    normalized_factor = -tmp.fun
+    step_base = .001 * normalized_factor
+    print("ma:", ma / keV, "Maximum:", normalized_factor)
     while E_over_keV < 19:
         E = E_over_keV * keV
         flux = sapf.solar_axion_flux(E, solar_data, unit=unit, g_aγ=g10, axion_mass=ma) / flux_unit
@@ -41,11 +47,12 @@ for (ii, ma) in enumerate(axion_mass_list):
             E_over_keV += step_base
             continue
 
+        print("E:", E_over_keV, "Flux:", flux)
         photon_energy_list.append(E_over_keV)
         ma_list.append(ma / keV)
         dΦ_dE_list.append(flux)
 
-        E_over_keV += step_base / (10 * flux)
+        E_over_keV += step_base + (normalized_factor - flux) * .001
     # end while
 
     # for E in photon_energy_list:
