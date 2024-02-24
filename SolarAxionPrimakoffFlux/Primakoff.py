@@ -2,7 +2,7 @@ from numpy import clip, exp, log, sqrt
 from numpy import pi as π
 
 from .read_solar_model import solar_model
-from .units import units_in_MeV, proton_mass, electron_mass, radius_of_Sun, distance_to_Sun, flux_unit
+from .units import units_in_MeV, proton_mass, electron_mass, helium_mass, radius_of_Sun, distance_to_Sun, flux_unit
 
 from scipy.integrate import quad
 
@@ -76,7 +76,10 @@ def transiation_rate(
     Debye_effect:bool=True
 ):
     r = normalized_solar_radius
-    np = ne = solar_data.Sun_proton_number_density_profile(r, unit)
+    nHe = solar_data.Sun_Helium_number_density_profile(r, unit)
+    ne = solar_data.Sun_proton_number_density_profile(r, unit)
+    np = ne - nHe
+    # np = ne = solar_data.Sun_proton_number_density_profile(r, unit)
     g = 1e-10 / unit.GeV if g_aγ == "default" else g_aγ
 
     if Debye_effect:
@@ -88,7 +91,8 @@ def transiation_rate(
 
     X_dict = {
         "e": {"mass": electron_mass(unit), "charge": -1, "density": ne},
-        "p": {"mass": proton_mass(unit), "charge": +1, "density": np}
+        "p": {"mass": proton_mass(unit), "charge": +1, "density": np},
+        "He": {"mass": helium_mass(unit), "charge": +2, "density": nHe}
     }
 
     result = 0

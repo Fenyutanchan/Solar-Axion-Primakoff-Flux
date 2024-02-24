@@ -50,9 +50,17 @@ class units_in_MeV:
     # end __set_other_units
 # end class units_in_MeV
         
+def unit_mass(unit:units_in_MeV):
+    return 931.49410242 * unit.MeV
+# end unit_mass
+
 def proton_mass(unit: units_in_MeV):
     return 938.27208816 * unit.MeV
 # end proton_mass
+
+def helium_mass(unit: units_in_MeV):
+    return 4.0026022 * unit_mass(unit)
+# end helium_mass
 
 def electron_mass(unit: units_in_MeV):
     return 0.51099895 * unit.MeV

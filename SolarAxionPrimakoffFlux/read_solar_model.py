@@ -6,7 +6,7 @@
 from numpy import loadtxt
 from numpy import interp
 from os.path import dirname, join
-from .units import units_in_MeV, proton_mass
+from .units import units_in_MeV, proton_mass, helium_mass
 
 class solar_model:
     def __init__(self, data_file_path=join(dirname(__file__), "data", "struct_b16_agss09.dat")):
@@ -35,4 +35,12 @@ class solar_model:
     def Sun_proton_number_density_profile(self, r, unit: units_in_MeV):
         return self.Sun_density_profile(r, unit) / proton_mass(unit)
     # end Sun_proton_number_density_profile
+
+    def Sun_H1_number_density_profile(self, r, unit: units_in_MeV):
+        return self.get_data("H1", r) * self.Sun_density_profile(r, unit) / proton_mass(unit)
+    # end Sun_H1_number_density_profile
+
+    def Sun_Helium_number_density_profile(self, r, unit: units_in_MeV):
+        return self.get_data("He4", r) * self.Sun_density_profile(r, unit) / helium_mass(unit)
+    # end Sun_Helium_number_density_profile
 # end class solar_model
