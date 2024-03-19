@@ -1,3 +1,8 @@
+# Copyright (c) 2024 Quan-feng WU <wuquanfeng@ihep.ac.cn> and Xun-Jie Xu <xunjie.xu@ihep.ac.cn>
+# 
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
 import sys
 from os.path import dirname
 sys.path.append(dirname(dirname(__file__)))
